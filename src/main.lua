@@ -38,21 +38,34 @@ function love.update(dt)
 		CAMERA_MAIN.direction = vec3.new(d.x,d.y - 0.01,d.z)
 	end
 	
-	if love.keyboard.isDown("w") then
+	if love.keyboard.isDown("a") then
 		CAMERA_MAIN.position = vec3.new(p.x + 0.01,p.y,p.z)
 	end
-	if love.keyboard.isDown("s") then
+	if love.keyboard.isDown("d") then
 		CAMERA_MAIN.position = vec3.new(p.x - 0.01,p.y,p.z)
 	end
-	if love.keyboard.isDown("a") then
+	if love.keyboard.isDown("w") then
+		CAMERA_MAIN.position = vec3.new(p.x,p.y,p.z - 0.01)
+	end
+	if love.keyboard.isDown("s") then
 		CAMERA_MAIN.position = vec3.new(p.x,p.y,p.z + 0.01)
 	end
-	if love.keyboard.isDown("d") then
-		CAMERA_MAIN.position = vec3.new(p.x,p.y,p.z - 0.01)
+	if love.keyboard.isDown("q") then
+		CAMERA_MAIN.position = vec3.new(p.x,p.y + 0.01,p.z)
+	end
+	if love.keyboard.isDown("e") then
+		CAMERA_MAIN.position = vec3.new(p.x,p.y - 0.01,p.z)
 	end
 end
 
 function love.draw()
 	obj1.mesh:render();
 	obj2.mesh:render();
+	
+	local info = "camera\n"
+	info = info .. "x: " .. CAMERA_MAIN.position.x .. "\n"
+	info = info .. "y: " .. CAMERA_MAIN.position.y .. "\n"
+	info = info .. "z: " .. CAMERA_MAIN.position.z .. "\n"
+	
+	love.graphics.print(info);
 end

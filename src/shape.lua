@@ -88,7 +88,9 @@ function ShapeBox:render()
 	for i = 1, #self.traapoints do
 	
 		local out = CAMERA_MAIN:transform(self.traapoints[i]);
-		local tx  = CAMERA_MAIN:tra_x(out.x); local ty = CAMERA_MAIN:tra_y(out.y);
+		local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
+		local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
+			--CAMERA_MAIN:tra_x(out.x); local ty = CAMERA_MAIN:tra_y(out.y);
 		
 		-- local cx = self.traapoints[i].x; local cy = self.traapoints[i].y; local cz = self.traapoints[i].z;
 		-- local tx = CAMERA_MAIN:tra_x(cx / (CAMERA_MAIN.position.z - cz)); 
