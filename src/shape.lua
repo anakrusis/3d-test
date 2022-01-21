@@ -32,6 +32,8 @@ function Shape.new(parent)
 	-- points in their actual position on which all transforms are done
 	self.traapoints = {};
 	
+	self.color = {1,1,1};
+	
 	return self;
 end
 setmetatable(Shape, {__index = Node});
@@ -98,7 +100,7 @@ function ShapeBox:render()
 		
 		--print(out.x .. " " .. out.y );
 		
-		love.graphics.setColor(1,1,1);
+		love.graphics.setColor( self.color );
 		love.graphics.circle("fill",tx,ty,3);
 	end
 end
