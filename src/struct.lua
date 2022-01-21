@@ -10,6 +10,12 @@ function Node.new(parent)
 	self.children = {};
 	
 	if (parent) then
+		print(parent.name);
+		for k,v in pairs(parent) do
+			print(k);
+		end
+		print("\n");
+		
 		parent:appendElement( self );
 	else
 		-- batman node
@@ -31,8 +37,11 @@ function Body.new(parent)
 	local self = setmetatable(Node.new(parent), Body);
 	
 	self.position       = vec3.new(0,0,0);
+	self.direction      = vec3.new(0,0,0);
+	
 	self.mesh           = nil;
 	self.collisionShape = nil;
 	
 	return self;
 end
+setmetatable(Body, {__index = Node});
