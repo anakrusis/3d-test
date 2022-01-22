@@ -46,6 +46,7 @@ function Shape:translate(vec3_offset)
 		local nz = self.traapoints[i].z + vec3_offset.z;
 		
 		self.traapoints[i] = vec3.new(nx,ny,nz);
+		print(self.traapoints[i]);
 	end
 end
 

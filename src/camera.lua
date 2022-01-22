@@ -2,7 +2,7 @@ Camera = {}; Camera.__index = Camera;
 function Camera.new(parent)
 	local self = setmetatable(Body.new(parent), Camera);
 	
-	self.zoom = 64;
+	self.zoom = 400;
 	
 	return self;
 end
@@ -32,11 +32,11 @@ function Camera:transform(vec3d_in)
 	local dy = sx * ((cy * z) + sy * ((sz * y) + (cz * x))) + cx * ((cz * y) - (sz * x)); 
 	local dz = cx * ((cy * z) + sy * ((sz * y) + (cz * x))) - (sx * ((cz * y) - (sz * x)));
 	
-	--if dz > 0 then
-		--return vec2.new(800,800);
-	--end
+	if dz < 0 then
+		return vec2.new(800,800);
+	end
 	
-	local fov = 2
+	local fov = 1
 	local bx = ((fov / dz) * dx)  --+ self.position.x
 	local by = ((fov / dz) * dy)  --+ self.position.y
 	
