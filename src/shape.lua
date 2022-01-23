@@ -30,7 +30,9 @@ function Shape.new(parent)
 	-- original set of points (vec3's) with no transforms applied
 	self.basepoints = {};
 	-- points in their actual position on which all transforms are done
-	self.traapoints = {};
+	self.points = {};
+	-- more organized verison of the above
+	self.faces = {};
 	
 	self.color = {1,1,1};
 	
@@ -38,26 +40,78 @@ function Shape.new(parent)
 end
 setmetatable(Shape, {__index = Node});
 
+-- offets all points in the shape by a fixed amount
 function Shape:translate(vec3_offset)
-	for i = 1, #self.traapoints do
-	
-		local nx = self.traapoints[i].x + vec3_offset.x;
-		local ny = self.traapoints[i].y + vec3_offset.y;
-		local nz = self.traapoints[i].z + vec3_offset.z;
+	for i = 1, #self.points do
+		local nx = self.points[i].x + vec3_offset.x;
+		local ny = self.points[i].y + vec3_offset.y;
+		local nz = self.points[i].z + vec3_offset.z;
 		
-		self.traapoints[i] = vec3.new(nx,ny,nz);
-		print(self.traapoints[i]);
+		self.points[i] = vec3.new(nx,ny,nz);
 	end
 end
 
+-- rotates all points in the shape along the specified axes by fixed amounts
 function Shape:rotate(vec3_offset)
 
 end
 
--- does nothing by default. each shape type will handle this differently
 function Shape:render()
-
+	for i = 1, #self.points do
+		local out = CAMERA_MAIN:transform(self.points[i]);
+		local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
+		local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
+		
+		love.graphics.setColor( self.color );
+		love.graphics.circle("fill",tx,ty,3);
+	end
 end
+
+-- -- does nothing by default. each shape type will handle this differently
+-- function Shape:render()
+
+-- end
+
+-- A quad is generated with a single extents vector. One of the three values therein must be zero!
+-- (Otherwise it wouldnt be much of a quad)
+ShapeQuad = {}; ShapeQuad.__index = ShapeQuad;
+function ShapeQuad.new(parent, extents)
+	local self = setmetatable(Shape.new(parent), ShapeQuad);
+	local dim1, dim2 = nil;
+	
+	-- identifies the two nonzero number values in the extents vector, which are dimensions for iterating
+	for k,v in pairs(extents) do
+		if type(v) == "number" then
+			if v ~= 0 and not dim1 then dim1 = k end
+			if k ~= dim1 and v ~= 0 and not dim2 then dim2 = k end
+		end
+	end
+	print( "dim1: " .. dim1 .. " dim2: " .. dim2 );
+	
+	local initialvec = vec3.new(extents.x,extents.y,extents.z);
+	for i = 1, 4 do
+		local newvec = vec3.new(initialvec.x, initialvec.y, initialvec.z)
+		table.insert(self.basepoints, newvec)
+		print(self.basepoints[i].x .. " " .. self.basepoints[i].y .. " " .. self.basepoints[i].z);
+		
+		if i == 1 or i == 3 then
+			initialvec[dim1] = -initialvec[dim1]
+		end
+		if i == 2 then
+			initialvec[dim2] = -initialvec[dim2]
+		end
+	end 
+	
+	-- deep copy of vectors for doing transforms
+	for i = 1, #self.basepoints do
+		local bp = self.basepoints[i];
+		local newvec = vec3.new(bp.x,bp.y,bp.z);
+		table.insert(self.points, newvec);
+	end
+	
+	return self;
+end
+setmetatable(ShapeQuad, {__index = Shape});
 
 -- rectangular prism
 ShapeBox = {}; ShapeBox.__index = ShapeBox;
@@ -77,31 +131,15 @@ function ShapeBox.new(parent, vec3_extents)
 	table.insert(self.basepoints,  vec3.new( -ex, -ey, -ez ))
 	table.insert(self.basepoints,  vec3.new(  ex, -ey, -ez ))
 	
-	-- deep copy of points for doing transforms
-	-- TODO: deep copy the vector objects so that they can be independently modified!!!
+	-- deep copy of vectors for doing transforms
 	for i = 1, #self.basepoints do
-		table.insert(self.traapoints, self.basepoints[i]);
+		local bp = self.basepoints[i];
+		local newvec = vec3.new(bp.x,bp.y,bp.z);
+		table.insert(self.points, newvec);
 	end
+	
+	-- shallow copy of vectors to the face objects
 	
 	return self;	
 end
 setmetatable(ShapeBox, {__index = Shape});
-
-function ShapeBox:render()
-	for i = 1, #self.traapoints do
-	
-		local out = CAMERA_MAIN:transform(self.traapoints[i]);
-		local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
-		local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
-			--CAMERA_MAIN:tra_x(out.x); local ty = CAMERA_MAIN:tra_y(out.y);
-		
-		-- local cx = self.traapoints[i].x; local cy = self.traapoints[i].y; local cz = self.traapoints[i].z;
-		-- local tx = CAMERA_MAIN:tra_x(cx / (CAMERA_MAIN.position.z - cz)); 
-		-- local ty = CAMERA_MAIN:tra_y(cy / (CAMERA_MAIN.position.z - cz));
-		
-		--print(out.x .. " " .. out.y );
-		
-		love.graphics.setColor( self.color );
-		love.graphics.circle("fill",tx,ty,3);
-	end
-end

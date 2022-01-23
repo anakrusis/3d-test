@@ -4,6 +4,9 @@ require "shape";
 require "struct";
 
 function love.load()
+	
+	success = love.window.setMode( 800, 800, {resizable=true, minwidth=800, minheight=600} )
+
 	SCENE = Node.new();
 	
 	obj1  = Body.new(SCENE); obj1.name = "Obj1";
@@ -15,9 +18,19 @@ function love.load()
 	obj2.mesh.color = {0,1,1}
 
 	obj3  = Body.new(SCENE); obj3.name = "Obj3";
-	obj3.mesh = ShapeBox.new(obj3, vec3.new(1,1,1));
+	obj3.mesh = ShapeQuad.new(obj3, vec3.new(1,1,0));
 	obj3.mesh:translate( vec3.new(4,0,4) );
 	obj3.mesh.color = {1,0,0}
+
+	obj4  = Body.new(SCENE); obj4.name = "Obj4";
+	obj4.mesh = ShapeQuad.new(obj4, vec3.new(4,0,4));
+	obj4.mesh:translate( vec3.new(6,8,4) );
+	obj4.mesh.color = {0,1,0}
+
+	obj5  = Body.new(SCENE); obj5.name = "Obj5";
+	obj5.mesh = ShapeQuad.new(obj5, vec3.new(0,3,1));
+	obj5.mesh:translate( vec3.new(10,0,6) );
+	obj5.mesh.color = {1,1,0}
 	
 	CAMERA_MAIN = Camera.new(SCENE);
 	CAMERA_MAIN.position  = vec3.new(0,0,2)
@@ -38,10 +51,10 @@ function love.update(dt)
 	end
 	
 	if love.keyboard.isDown("up") then
-		--CAMERA_MAIN.direction = vec3.new(d.x,d.y + 0.01,d.z)
+		CAMERA_MAIN.direction = vec3.new(d.x + 0.05,d.y,d.z)
 	end
 	if love.keyboard.isDown("down") then
-		--CAMERA_MAIN.direction = vec3.new(d.x,d.y - 0.01,d.z)
+		CAMERA_MAIN.direction = vec3.new(d.x - 0.05,d.y,d.z)
 	end
 	
 	if love.keyboard.isDown("a") then
@@ -70,10 +83,14 @@ function love.update(dt)
 end
 
 function love.draw()
-	obj2.mesh:render();
-	obj3.mesh:render();
-	obj1.mesh:render();
+	for k,v in pairs(SCENE.children) do
+		if v.mesh then
+			v.mesh:render();
+		end
+	end
 	
+	-- DEBUG TEXT
+	love.graphics.setColor(1,1,1)
 	local info = "cam pos\n"
 	info = info .. "x: " .. CAMERA_MAIN.position.x .. "\n"
 	info = info .. "y: " .. CAMERA_MAIN.position.y .. "\n"

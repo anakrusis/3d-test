@@ -10,11 +10,11 @@ function Node.new(parent)
 	self.children = {};
 	
 	if (parent) then
-		print(parent.name);
+		--print(parent.name);
 		for k,v in pairs(parent) do
-			print(k);
+			--print(k);
 		end
-		print("\n");
+		--print("\n");
 		
 		parent:appendElement( self );
 	else
