@@ -31,10 +31,8 @@ function Shape.new(parent)
 	self.basepoints = {};
 	-- points in their actual position on which all transforms are done
 	self.points = {};
-	-- more organized verison of the above
-	self.faces = {};
 	
-	self.color = {1,1,1};
+	self.color = {0.75,0.75,0.75};
 	
 	return self;
 end
@@ -114,22 +112,21 @@ end
 setmetatable(ShapeQuad, {__index = Shape});
 
 function ShapeQuad:render()
-	local prevx, prevy;
+	local vertices = {};
 
-	for i = 1, #self.points + 1 do
+	for i = 1, #self.points do
 		local index = 1 + ((i - 1) % #self.points);
 		
 		local out = CAMERA_MAIN:transform(self.points[index]);
 		local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
 		local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
 		
-		if prevx then
-			love.graphics.setColor( self.color );
-			love.graphics.line(prevx,prevy,tx,ty);
-		end
-		
-		prevx = tx; prevy = ty;
+		table.insert(vertices, tx); table.insert(vertices, ty); 
 	end
+	love.graphics.setColor(self.color);
+	love.graphics.polygon("fill", vertices);
+	love.graphics.setColor(0,0,0)
+	love.graphics.polygon("line", vertices);
 end
 
 -- rectangular prism
@@ -139,26 +136,55 @@ function ShapeBox.new(parent, vec3_extents)
 	-- extents values
 	local ex = vec3_extents.x; local ey = vec3_extents.y; local ez = vec3_extents.z; 
 	
-	-- the eight vertices of the box shape will here be defined
-	table.insert(self.basepoints,  vec3.new(  ex,  ey, ez ))
-	table.insert(self.basepoints,  vec3.new( -ex,  ey, ez ))
-	table.insert(self.basepoints,  vec3.new( -ex, -ey, ez ))
-	table.insert(self.basepoints,  vec3.new(  ex, -ey, ez ))
+	-- set of six ShapeQuad objects for rendering/culling
+	self.faces = {};
+	local f1 = ShapeQuad.new(SCENE, vec3.new(ex, ey, 0))
+	f1:translate( vec3.new( 0, 0, -ez ) );
+	local f2 = ShapeQuad.new(SCENE, vec3.new(ex, 0, ez))
+	f2:translate( vec3.new( 0, -ey, 0 ) );
+	local f3 = ShapeQuad.new(SCENE, vec3.new(0, ey, ez))
+	f3:translate( vec3.new( -ex, 0, 0 ) );
+	local f4 = ShapeQuad.new(SCENE, vec3.new(ex, ey, 0))
+	f4:translate( vec3.new( 0, 0, ez ) );
+	local f5 = ShapeQuad.new(SCENE, vec3.new(ex, 0, ez))
+	f5:translate( vec3.new( 0, ey, 0 ) );
+	local f6 = ShapeQuad.new(SCENE, vec3.new(0, ey, ez))
+	f6:translate( vec3.new( ex, 0, 0 ) );
 	
-	table.insert(self.basepoints,  vec3.new(  ex,  ey, -ez ))
-	table.insert(self.basepoints,  vec3.new( -ex,  ey, -ez ))
-	table.insert(self.basepoints,  vec3.new( -ex, -ey, -ez ))
-	table.insert(self.basepoints,  vec3.new(  ex, -ey, -ez ))
+	self.faces = {f1, f2, f3, f4, f5, f6};
 	
-	-- deep copy of vectors for doing transforms
-	for i = 1, #self.basepoints do
-		local bp = self.basepoints[i];
-		local newvec = vec3.new(bp.x,bp.y,bp.z);
-		table.insert(self.points, newvec);
-	end
+	-- -- the eight vertices of the box shape will here be defined
+	-- table.insert(self.basepoints,  vec3.new(  ex,  ey, ez ))
+	-- table.insert(self.basepoints,  vec3.new( -ex,  ey, ez ))
+	-- table.insert(self.basepoints,  vec3.new( -ex, -ey, ez ))
+	-- table.insert(self.basepoints,  vec3.new(  ex, -ey, ez ))
 	
-	-- shallow copy of vectors to the face objects
+	-- table.insert(self.basepoints,  vec3.new(  ex,  ey, -ez ))
+	-- table.insert(self.basepoints,  vec3.new( -ex,  ey, -ez ))
+	-- table.insert(self.basepoints,  vec3.new( -ex, -ey, -ez ))
+	-- table.insert(self.basepoints,  vec3.new(  ex, -ey, -ez ))
+	
+	-- -- deep copy of vectors for doing transforms
+	-- for i = 1, #self.basepoints do
+		-- local bp = self.basepoints[i];
+		-- local newvec = vec3.new(bp.x,bp.y,bp.z);
+		-- table.insert(self.points, newvec);
+	-- end
+	
+	-- -- shallow copy of vectors to the face objects
 	
 	return self;	
 end
 setmetatable(ShapeBox, {__index = Shape});
+
+function ShapeBox:translate(vec3_offset)
+	for i = 1, #self.faces do
+		self.faces[i]:translate(vec3_offset);
+	end
+end
+
+function ShapeBox:render()
+	for i = 1, #self.faces do
+		self.faces[i]:render();
+	end
+end

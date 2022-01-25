@@ -6,7 +6,8 @@ require "struct";
 function love.load()
 	
 	success = love.window.setMode( 800, 800, {resizable=true, minwidth=800, minheight=600} )
-
+	love.graphics.setLineJoin( "none" );
+	
 	SCENE = Node.new();
 	
 	obj1  = Body.new(SCENE); obj1.name = "Obj1";
@@ -83,6 +84,9 @@ function love.update(dt)
 end
 
 function love.draw()
+	love.graphics.setBackgroundColor( 1,1,1 )
+	love.graphics.setLineWidth( 5 )
+
 	for k,v in pairs(SCENE.children) do
 		if v.mesh then
 			v.mesh:render();
@@ -90,7 +94,9 @@ function love.draw()
 	end
 	
 	-- DEBUG TEXT
-	love.graphics.setColor(1,1,1)
+	love.graphics.setColor(0,0,0)
+	love.graphics.setLineWidth( 1 )
+
 	local info = "cam pos\n"
 	info = info .. "x: " .. CAMERA_MAIN.position.x .. "\n"
 	info = info .. "y: " .. CAMERA_MAIN.position.y .. "\n"
