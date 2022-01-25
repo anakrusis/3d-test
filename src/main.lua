@@ -44,17 +44,17 @@ function love.update(dt)
 	local p = CAMERA_MAIN.position;
 	
 	if love.keyboard.isDown("left") then
-		CAMERA_MAIN.direction = vec3.new(d.x,d.y - 0.05,d.z)
+		CAMERA_MAIN.direction = vec3.new(d.x,d.y - 0.025,d.z)
 	end
 	if love.keyboard.isDown("right") then
-		CAMERA_MAIN.direction = vec3.new(d.x,d.y + 0.05,d.z)
+		CAMERA_MAIN.direction = vec3.new(d.x,d.y + 0.025,d.z)
 	end
 	
 	if love.keyboard.isDown("up") then
-		CAMERA_MAIN.direction = vec3.new(d.x + 0.05,d.y,d.z)
+		CAMERA_MAIN.direction = vec3.new(d.x + 0.025,d.y,d.z)
 	end
 	if love.keyboard.isDown("down") then
-		CAMERA_MAIN.direction = vec3.new(d.x - 0.05,d.y,d.z)
+		CAMERA_MAIN.direction = vec3.new(d.x - 0.025,d.y,d.z)
 	end
 	
 	if love.keyboard.isDown("a") then
@@ -113,7 +113,7 @@ function love.draw()
 	local arrowsize = 8;
 	local ex = arrowsize * math.sin( CAMERA_MAIN.direction.y );
 	local ey = arrowsize * math.cos( CAMERA_MAIN.direction.y );
-	love.graphics.line(tx,ty,tx+ex,ty+ey);
+	--love.graphics.line(tx,ty,tx+ex,ty+ey);
 	
 	love.graphics.line(0,128,256,128)
 	love.graphics.line(128,0,128,256)

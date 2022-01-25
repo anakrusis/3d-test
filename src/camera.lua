@@ -33,8 +33,10 @@ function Camera:transform(vec3d_in)
 	local dz = cx * ((cy * z) + sy * ((sz * y) + (cz * x))) - (sx * ((cz * y) - (sz * x)));
 	
 	if dz < 0 then
-		return vec2.new(800,800);
-	end
+		dz = 0.0001;
+		--bx = -bx; by = -by;
+		--dx = -dx; dy = -dy; dz = -dz;
+	end	
 	
 	local fov = 1
 	local bx = ((fov / dz) * dx)  --+ self.position.x

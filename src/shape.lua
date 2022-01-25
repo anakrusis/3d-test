@@ -113,6 +113,25 @@ function ShapeQuad.new(parent, extents)
 end
 setmetatable(ShapeQuad, {__index = Shape});
 
+function ShapeQuad:render()
+	local prevx, prevy;
+
+	for i = 1, #self.points + 1 do
+		local index = 1 + ((i - 1) % #self.points);
+		
+		local out = CAMERA_MAIN:transform(self.points[index]);
+		local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
+		local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
+		
+		if prevx then
+			love.graphics.setColor( self.color );
+			love.graphics.line(prevx,prevy,tx,ty);
+		end
+		
+		prevx = tx; prevy = ty;
+	end
+end
+
 -- rectangular prism
 ShapeBox = {}; ShapeBox.__index = ShapeBox;
 function ShapeBox.new(parent, vec3_extents)
