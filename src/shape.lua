@@ -38,6 +38,10 @@ function vec3:distance( vec3_in )
 	return math.sqrt( x + y + z );
 end
 
+function vec3:dot( vec3_in )
+	return ( self.x * vec3_in.x ) + ( self.y * vec3_in.y ) + ( self.z * vec3_in.z );
+end
+
 function vec3:cross( vec3_in )
 	local x = (self.y * vec3_in.z) - (self.z * vec3_in.y);
 	local y = (self.z * vec3_in.x) - (self.x * vec3_in.z);
@@ -191,7 +195,12 @@ end
 
 function ShapeQuad:render()
 	local vertices = {};
+	
+	local camtoquad = self.position:subtract( CAMERA_MAIN.position );
+	local dot = camtoquad:dot( self:getNormal() );
+	if dot >= 0 then return end
 
+	OFFSCREEN_FLAG = true;
 	-- indexes/transforms the points of the surface
 	for i = 1, #self.points do
 		local index = 1 + ((i - 1) % #self.points);
@@ -202,6 +211,8 @@ function ShapeQuad:render()
 		
 		table.insert(vertices, tx); table.insert(vertices, ty); 
 	end
+	if OFFSCREEN_FLAG then return end
+	
 	-- Draws the surface
 	love.graphics.setColor(self.color);
 	love.graphics.polygon("fill", vertices);
@@ -220,7 +231,7 @@ function ShapeQuad:render()
 	out = CAMERA_MAIN:transform(point2); 
 	local nx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
 	local ny  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
-	love.graphics.line(tx,ty,nx,ny);
+	--love.graphics.line(tx,ty,nx,ny);
 end
 
 -- rectangular prism
@@ -249,7 +260,6 @@ function ShapeBox.new(parent, vec3_extents)
 	f4:translate( vec3.new( 0, 0, ez ) );
 	
 	local f5 = ShapeQuad.new(self, vec3.new(ex, 0, ez))
-	f5.color = {0,0,1}
 	f5:rotate( vec3.new( 0, 0, math.pi ));
 	f5:translate( vec3.new( 0, ey, 0 ) );
 	

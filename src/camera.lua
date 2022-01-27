@@ -32,10 +32,12 @@ function Camera:transform(vec3d_in)
 	local dy = sx * ((cy * z) + sy * ((sz * y) + (cz * x))) + cx * ((cz * y) - (sz * x)); 
 	local dz = cx * ((cy * z) + sy * ((sz * y) + (cz * x))) - (sx * ((cz * y) - (sz * x)));
 	
-	if dz < 0 then
+	if dz <= 0 then
 		dz = 0.0001;
 		--bx = -bx; by = -by;
 		--dx = -dx; dy = -dy; dz = -dz;
+	else
+		OFFSCREEN_FLAG = false;
 	end	
 	
 	local fov = 1
