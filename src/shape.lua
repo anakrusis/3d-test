@@ -21,11 +21,28 @@ function vec3.new(x,y,z)
 	return self;
 end
 
+function vec3:add( vec3_in )
+	local x = self.x + vec3_in.x; local y = self.y + vec3_in.y; local z = self.z + vec3_in.z;
+	return vec3.new(x,y,z);
+end
+
+function vec3:subtract( vec3_in )
+	local x = self.x - vec3_in.x; local y = self.y - vec3_in.y; local z = self.z - vec3_in.z;
+	return vec3.new(x,y,z);
+end
+
 function vec3:distance( vec3_in )
 	local x = math.pow( vec3_in.x - self.x , 2 );
 	local y = math.pow( vec3_in.y - self.y , 2 );
 	local z = math.pow( vec3_in.z - self.z , 2 );
-	return math.sqrt( x + y + z )
+	return math.sqrt( x + y + z );
+end
+
+function vec3:cross( vec3_in )
+	local x = (self.y * vec3_in.z) - (self.z * vec3_in.y);
+	local y = (self.z * vec3_in.x) - (self.x * vec3_in.z);
+	local z = (self.x * vec3_in.y) - (self.y * vec3_in.x);
+	return vec3.new(x,y,z);
 end
 
 -- base type for meshes, collision shapes, etc.
@@ -34,6 +51,8 @@ Shape = {}; Shape.__index = Shape;
 function Shape.new(parent)	
 	local self = setmetatable(Node.new(parent), Shape);
 	
+	-- should match the parents position
+	self.position = vec3.new(0,0,0);
 	-- original set of points (vec3's) with no transforms applied
 	self.basepoints = {};
 	-- points in their actual position on which all transforms are done
@@ -54,11 +73,45 @@ function Shape:translate(vec3_offset)
 		
 		self.points[i] = vec3.new(nx,ny,nz);
 	end
+	self.position = self.position:add( vec3_offset );
 end
 
--- rotates all points in the shape along the specified axes by fixed amounts
-function Shape:rotate(vec3_offset)
+-- rotates all points in the shape around the point self.position
+function Shape:rotate(vec3_rot)
 
+	local cosa = math.cos(vec3_rot.y)
+	local sina = math.sin(vec3_rot.y)
+	
+	local cosb = math.cos(vec3_rot.x)
+	local sinb = math.sin(vec3_rot.x)
+	
+	local cosc = math.cos(vec3_rot.z)
+	local sinc = math.sin(vec3_rot.z)
+	
+	local Axx = cosa * cosb;
+	local Axy = ( cosa * sinb * sinc ) - ( sina * cosc )
+	local Axz = ( cosa * sinb * cosc ) + ( sina * sinc )
+	
+	local Ayx = sina * cosb;
+	local Ayy = ( sina * sinb * sinc ) + ( cosa * cosc )
+	local Ayz = ( sina * sinb * cosc ) - ( cosa * sinc )
+	
+	local Azx = - sinb;
+	local Azy = ( cosb * sinc )
+	local Azz = ( cosb * cosc )
+
+	for i = 1, #self.points do
+		local ox = self.points[i].x - self.position.x;
+		local oy = self.points[i].y - self.position.y;
+		local oz = self.points[i].z - self.position.z;
+		
+		local nx = (Axx * ox) + (Axy * oy) + (Axz * oz)
+		local ny = (Ayx * ox) + (Ayy * oy) + (Ayz * oz)
+		local nz = (Azx * ox) + (Azy * oy) + (Azz * oz)
+		
+		self.points[i] = vec3.new(nx + self.position.x, ny + self.position.y, nz + self.position.z);
+		print(nx + self.position.x .. " " .. ny + self.position.y .. " " .. nz + self.position.z);
+	end
 end
 
 function Shape:render()
@@ -128,9 +181,18 @@ function ShapeQuad.new(parent, extents)
 end
 setmetatable(ShapeQuad, {__index = Shape});
 
+function ShapeQuad:getNormal()
+	local edge1 = self.points[1]:subtract( self.position )
+	local edge2 = self.points[2]:subtract( self.position )
+	
+	local prod = edge1:cross( edge2 );
+	return prod;
+end
+
 function ShapeQuad:render()
 	local vertices = {};
 
+	-- indexes/transforms the points of the surface
 	for i = 1, #self.points do
 		local index = 1 + ((i - 1) % #self.points);
 		
@@ -140,10 +202,25 @@ function ShapeQuad:render()
 		
 		table.insert(vertices, tx); table.insert(vertices, ty); 
 	end
+	-- Draws the surface
 	love.graphics.setColor(self.color);
 	love.graphics.polygon("fill", vertices);
 	love.graphics.setColor(0,0,0)
 	love.graphics.polygon("line", vertices);
+	
+	-- Draws a single point at the position vector of the surface
+	local out = CAMERA_MAIN:transform(self.position);
+	local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
+	local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
+	love.graphics.circle("fill", tx, ty, 5);
+	
+	-- Draws a line perpendicular to the surface
+	local normal = self:getNormal();
+	local point2 = self.position:add(normal);
+	out = CAMERA_MAIN:transform(point2); 
+	local nx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
+	local ny  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
+	love.graphics.line(tx,ty,nx,ny);
 end
 
 -- rectangular prism
@@ -157,16 +234,25 @@ function ShapeBox.new(parent, vec3_extents)
 	
 	-- set of six ShapeQuad objects for rendering/culling
 	self.faces = {};
-	local f1 = ShapeQuad.new(self, vec3.new(ex, ey, 0))
+	local f1 = ShapeQuad.new(self, vec3.new(ex, ey, 0)); 
+	f1:rotate( vec3.new( math.pi, 0, 0 ));
 	f1:translate( vec3.new( 0, 0, -ez ) );
-	local f2 = ShapeQuad.new(self, vec3.new(ex, 0, ez))
+	
+	local f2 = ShapeQuad.new(self, vec3.new(ex, 0, ez)); 
 	f2:translate( vec3.new( 0, -ey, 0 ) );
-	local f3 = ShapeQuad.new(self, vec3.new(0, ey, ez))
+	
+	local f3 = ShapeQuad.new(self, vec3.new(0, ey, ez)); 
+	f3:rotate( vec3.new( 0, math.pi, 0 ));
 	f3:translate( vec3.new( -ex, 0, 0 ) );
+	
 	local f4 = ShapeQuad.new(self, vec3.new(ex, ey, 0))
 	f4:translate( vec3.new( 0, 0, ez ) );
+	
 	local f5 = ShapeQuad.new(self, vec3.new(ex, 0, ez))
+	f5.color = {0,0,1}
+	f5:rotate( vec3.new( 0, 0, math.pi ));
 	f5:translate( vec3.new( 0, ey, 0 ) );
+	
 	local f6 = ShapeQuad.new(self, vec3.new(0, ey, ez))
 	f6:translate( vec3.new( ex, 0, 0 ) );
 	

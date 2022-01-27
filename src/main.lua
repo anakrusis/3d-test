@@ -15,7 +15,7 @@ function love.load()
 
 	obj2  = Body.new(SCENE); obj2.name = "Obj2";
 	obj2.mesh = ShapeBox.new(obj2, vec3.new(1,1,1));
-	obj2.mesh:translate( vec3.new(0,4,0) );
+	obj2.mesh:translate( vec3.new(0,6,0) );
 	obj2.mesh:setColor(0,1,1)
 
 	obj3  = Body.new(SCENE); obj3.name = "Obj3";
@@ -45,10 +45,10 @@ function love.update(dt)
 	local p = CAMERA_MAIN.position;
 	
 	if love.keyboard.isDown("left") then
-		CAMERA_MAIN.direction = vec3.new(d.x,d.y - 0.025,d.z)
+		CAMERA_MAIN.direction = CAMERA_MAIN.direction:add(vec3.new(0, -0.025, 0));
 	end
 	if love.keyboard.isDown("right") then
-		CAMERA_MAIN.direction = vec3.new(d.x,d.y + 0.025,d.z)
+		CAMERA_MAIN.direction = CAMERA_MAIN.direction:add(vec3.new(0, 0.025, 0));
 	end
 	
 	if love.keyboard.isDown("up") then
@@ -70,6 +70,7 @@ function love.update(dt)
 	local s = coeff * ( math.cos(d.y) );
 	
 	if love.keyboard.isDown("w") then
+		--CAMERA_MAIN.position = CAMERA_MAIN.position:add( vec3.new( d.x * 0.01, d.y * 0.01, d.z * 0.01 ) );
 		CAMERA_MAIN.position = vec3.new( p.x + c, p.y, p.z + s )
 	end
 	if love.keyboard.isDown("s") then
