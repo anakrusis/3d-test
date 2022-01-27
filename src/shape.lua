@@ -21,6 +21,13 @@ function vec3.new(x,y,z)
 	return self;
 end
 
+function vec3:distance( vec3_in )
+	local x = math.pow( vec3_in.x - self.x , 2 );
+	local y = math.pow( vec3_in.y - self.y , 2 );
+	local z = math.pow( vec3_in.z - self.z , 2 );
+	return math.sqrt( x + y + z )
+end
+
 -- base type for meshes, collision shapes, etc.
 -- will have methods for rotation, scaling, translation
 Shape = {}; Shape.__index = Shape;
@@ -75,22 +82,23 @@ end
 ShapeQuad = {}; ShapeQuad.__index = ShapeQuad;
 function ShapeQuad.new(parent, extents)
 	local self = setmetatable(Shape.new(parent), ShapeQuad);
-	local dim1, dim2 = nil;
+	self.type = "ShapeQuad";
 	
 	-- identifies the two nonzero number values in the extents vector, which are dimensions for iterating
+	local dim1, dim2 = nil;
 	for k,v in pairs(extents) do
 		if type(v) == "number" then
 			if v ~= 0 and not dim1 then dim1 = k end
 			if k ~= dim1 and v ~= 0 and not dim2 then dim2 = k end
 		end
 	end
-	print( "dim1: " .. dim1 .. " dim2: " .. dim2 );
+	--print( "dim1: " .. dim1 .. " dim2: " .. dim2 );
 	
 	local initialvec = vec3.new(extents.x,extents.y,extents.z);
 	for i = 1, 4 do
 		local newvec = vec3.new(initialvec.x, initialvec.y, initialvec.z)
 		table.insert(self.basepoints, newvec)
-		print(self.basepoints[i].x .. " " .. self.basepoints[i].y .. " " .. self.basepoints[i].z);
+		--print(self.basepoints[i].x .. " " .. self.basepoints[i].y .. " " .. self.basepoints[i].z);
 		
 		if i == 1 or i == 3 then
 			initialvec[dim1] = -initialvec[dim1]
@@ -106,6 +114,15 @@ function ShapeQuad.new(parent, extents)
 		local newvec = vec3.new(bp.x,bp.y,bp.z);
 		table.insert(self.points, newvec);
 	end
+		
+	--print(parent.name);
+	for k,v in pairs(parent) do
+			--print(k);
+	end
+	--print("\n");
+	
+	print(self.parent.color);
+	if self.parent.color then self.color = self.parent.color end
 	
 	return self;
 end
@@ -133,22 +150,24 @@ end
 ShapeBox = {}; ShapeBox.__index = ShapeBox;
 function ShapeBox.new(parent, vec3_extents)
 	local self = setmetatable(Shape.new(parent), ShapeBox);
+	self.type = "ShapeBox";
+	
 	-- extents values
 	local ex = vec3_extents.x; local ey = vec3_extents.y; local ez = vec3_extents.z; 
 	
 	-- set of six ShapeQuad objects for rendering/culling
 	self.faces = {};
-	local f1 = ShapeQuad.new(SCENE, vec3.new(ex, ey, 0))
+	local f1 = ShapeQuad.new(self, vec3.new(ex, ey, 0))
 	f1:translate( vec3.new( 0, 0, -ez ) );
-	local f2 = ShapeQuad.new(SCENE, vec3.new(ex, 0, ez))
+	local f2 = ShapeQuad.new(self, vec3.new(ex, 0, ez))
 	f2:translate( vec3.new( 0, -ey, 0 ) );
-	local f3 = ShapeQuad.new(SCENE, vec3.new(0, ey, ez))
+	local f3 = ShapeQuad.new(self, vec3.new(0, ey, ez))
 	f3:translate( vec3.new( -ex, 0, 0 ) );
-	local f4 = ShapeQuad.new(SCENE, vec3.new(ex, ey, 0))
+	local f4 = ShapeQuad.new(self, vec3.new(ex, ey, 0))
 	f4:translate( vec3.new( 0, 0, ez ) );
-	local f5 = ShapeQuad.new(SCENE, vec3.new(ex, 0, ez))
+	local f5 = ShapeQuad.new(self, vec3.new(ex, 0, ez))
 	f5:translate( vec3.new( 0, ey, 0 ) );
-	local f6 = ShapeQuad.new(SCENE, vec3.new(0, ey, ez))
+	local f6 = ShapeQuad.new(self, vec3.new(0, ey, ez))
 	f6:translate( vec3.new( ex, 0, 0 ) );
 	
 	self.faces = {f1, f2, f3, f4, f5, f6};
@@ -177,9 +196,23 @@ function ShapeBox.new(parent, vec3_extents)
 end
 setmetatable(ShapeBox, {__index = Shape});
 
+-- for some reason we have to redundantly define this here, otherwise the faces arent able to call it on the parent node ("self") in the above constructor
+-- (does anyone know why this is?)
+function ShapeBox:appendElement(e)
+	e.parent = self;
+	table.insert(self.children, e);
+end
+
 function ShapeBox:translate(vec3_offset)
 	for i = 1, #self.faces do
 		self.faces[i]:translate(vec3_offset);
+	end
+end
+
+function ShapeBox:setColor(r,g,b)
+	self.color = {r,g,b};
+	for i = 1, #self.faces do
+		self.faces[i].color = self.color;
 	end
 end
 

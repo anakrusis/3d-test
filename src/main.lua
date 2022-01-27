@@ -16,7 +16,7 @@ function love.load()
 	obj2  = Body.new(SCENE); obj2.name = "Obj2";
 	obj2.mesh = ShapeBox.new(obj2, vec3.new(1,1,1));
 	obj2.mesh:translate( vec3.new(0,4,0) );
-	obj2.mesh.color = {0,1,1}
+	obj2.mesh:setColor(0,1,1)
 
 	obj3  = Body.new(SCENE); obj3.name = "Obj3";
 	obj3.mesh = ShapeQuad.new(obj3, vec3.new(1,1,0));
@@ -83,14 +83,53 @@ function love.update(dt)
 	end
 end
 
+function sortQuads(a,b)
+	local a_furthest_point = nil;
+	local a_furthest_dist  = 0;
+	for i = 1, 4 do
+		local apoint = a.points[i];
+		local dist = apoint:distance( CAMERA_MAIN.position );
+		if dist > a_furthest_dist then
+			a_furthest_dist = dist; a_furthest_point = apoint;
+		end
+	end
+	
+	local b_furthest_point = nil;
+	local b_furthest_dist  = 0;
+	for i = 1, 4 do
+		local bpoint = b.points[i];
+		local dist = bpoint:distance( CAMERA_MAIN.position );
+		if dist > b_furthest_dist then
+			b_furthest_dist = dist; b_furthest_point = bpoint;
+		end
+	end
+	
+	return a_furthest_dist > b_furthest_dist
+end
+
 function love.draw()
 	love.graphics.setBackgroundColor( 1,1,1 )
 	love.graphics.setLineWidth( 5 )
+	
+	-- this will contain a table of all the quads to render, sorted from back to front
+	-- PAINTERS ALGORITHM STYLE I think?
+	SORTED_QUADS = {}
 
 	for k,v in pairs(SCENE.children) do
 		if v.mesh then
-			v.mesh:render();
+			if v.mesh.type == "ShapeQuad" then
+				table.insert(SORTED_QUADS, v.mesh);
+			
+			elseif v.mesh.type == "ShapeBox" then
+				for i = 1, #v.mesh.faces do
+					table.insert(SORTED_QUADS, v.mesh.faces[i]);
+				end
+			end
 		end
+	end
+	table.sort(SORTED_QUADS, sortQuads)
+	for i = 1, #SORTED_QUADS do
+		SORTED_QUADS[i]:render();
 	end
 	
 	-- DEBUG TEXT
