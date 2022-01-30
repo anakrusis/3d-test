@@ -81,13 +81,16 @@ function Shape:translate(vec3_offset)
 end
 
 -- rotates all points in the shape around the point self.position
-function Shape:rotate(vec3_rot)
+function Shape:rotate(vec3_rot, origin)
+	if not origin then
+		origin = self.position;
+	end
 
-	local cosa = math.cos(vec3_rot.y)
-	local sina = math.sin(vec3_rot.y)
+	local cosa = math.cos(vec3_rot.x)
+	local sina = math.sin(vec3_rot.x)
 	
-	local cosb = math.cos(vec3_rot.x)
-	local sinb = math.sin(vec3_rot.x)
+	local cosb = math.cos(vec3_rot.y)
+	local sinb = math.sin(vec3_rot.y)
 	
 	local cosc = math.cos(vec3_rot.z)
 	local sinc = math.sin(vec3_rot.z)
@@ -104,17 +107,31 @@ function Shape:rotate(vec3_rot)
 	local Azy = ( cosb * sinc )
 	local Azz = ( cosb * cosc )
 
+	-- translating all the points in the shape
 	for i = 1, #self.points do
-		local ox = self.points[i].x - self.position.x;
-		local oy = self.points[i].y - self.position.y;
-		local oz = self.points[i].z - self.position.z;
+		local ox = self.points[i].x - origin.x;
+		local oy = self.points[i].y - origin.y;
+		local oz = self.points[i].z - origin.z;
 		
 		local nx = (Axx * ox) + (Axy * oy) + (Axz * oz)
 		local ny = (Ayx * ox) + (Ayy * oy) + (Ayz * oz)
 		local nz = (Azx * ox) + (Azy * oy) + (Azz * oz)
 		
-		self.points[i] = vec3.new(nx + self.position.x, ny + self.position.y, nz + self.position.z);
-		print(nx + self.position.x .. " " .. ny + self.position.y .. " " .. nz + self.position.z);
+		self.points[i] = vec3.new(nx + origin.x, ny + origin.y, nz + origin.z);
+		--print(nx + origin.x .. " " .. ny + origin.y .. " " .. nz + origin.z);
+	end
+
+	-- translating the position vector of the shape along with its points	
+	if origin ~= self.position then
+		local ox = self.position.x - origin.x;
+		local oy = self.position.y - origin.y;
+		local oz = self.position.z - origin.z;
+		
+		local nx = (Axx * ox) + (Axy * oy) + (Axz * oz)
+		local ny = (Ayx * ox) + (Ayy * oy) + (Ayz * oz)
+		local nz = (Azx * ox) + (Azy * oy) + (Azz * oz)
+		
+		self.position = vec3.new(nx + origin.x, ny + origin.y, nz + origin.z);
 	end
 end
 
@@ -196,10 +213,12 @@ end
 function ShapeQuad:render()
 	local vertices = {};
 	
+	-- backface culling
 	local camtoquad = self.position:subtract( CAMERA_MAIN.position );
 	local dot = camtoquad:dot( self:getNormal() );
 	if dot >= 0 then return end
 
+	--print("points")
 	OFFSCREEN_FLAG = true;
 	-- indexes/transforms the points of the surface
 	for i = 1, #self.points do
@@ -219,6 +238,7 @@ function ShapeQuad:render()
 	love.graphics.setColor(0,0,0)
 	love.graphics.polygon("line", vertices);
 	
+	--print("center")
 	-- Draws a single point at the position vector of the surface
 	local out = CAMERA_MAIN:transform(self.position);
 	local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
@@ -231,7 +251,7 @@ function ShapeQuad:render()
 	out = CAMERA_MAIN:transform(point2); 
 	local nx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
 	local ny  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
-	--love.graphics.line(tx,ty,nx,ny);
+	love.graphics.line(tx,ty,nx,ny);
 end
 
 -- rectangular prism
@@ -246,7 +266,7 @@ function ShapeBox.new(parent, vec3_extents)
 	-- set of six ShapeQuad objects for rendering/culling
 	self.faces = {};
 	local f1 = ShapeQuad.new(self, vec3.new(ex, ey, 0)); 
-	f1:rotate( vec3.new( math.pi, 0, 0 ));
+	f1:rotate( vec3.new( 0, math.pi, 0 ));
 	f1:translate( vec3.new( 0, 0, -ez ) );
 	
 	local f2 = ShapeQuad.new(self, vec3.new(ex, 0, ez)); 
@@ -302,6 +322,13 @@ end
 function ShapeBox:translate(vec3_offset)
 	for i = 1, #self.faces do
 		self.faces[i]:translate(vec3_offset);
+	end
+	self.position = self.position:add( vec3_offset );
+end
+
+function ShapeBox:rotate( vec3_rot )
+	for i = 1, #self.faces do
+		self.faces[i]:rotate(vec3_rot, self.position);
 	end
 end
 

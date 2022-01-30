@@ -45,3 +45,19 @@ function Body.new(parent)
 	return self;
 end
 setmetatable(Body, {__index = Node});
+
+function Body:rotate( vec3_rot )
+	self.direction = self.direction:add( vec3_rot );
+
+	if self.mesh then
+		self.mesh:rotate( vec3_rot );
+	end
+end
+
+function Body:translate( vec3_offset )
+	self.position = self.position:add( vec3_offset );
+	
+	if self.mesh then
+		self.mesh:translate( vec3_offset );
+	end
+end

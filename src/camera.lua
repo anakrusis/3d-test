@@ -2,7 +2,7 @@ Camera = {}; Camera.__index = Camera;
 function Camera.new(parent)
 	local self = setmetatable(Body.new(parent), Camera);
 	
-	self.zoom = 600;
+	self.zoom = 800;
 	
 	return self;
 end
@@ -32,13 +32,16 @@ function Camera:transform(vec3d_in)
 	local dy = sx * ((cy * z) + sy * ((sz * y) + (cz * x))) + cx * ((cz * y) - (sz * x)); 
 	local dz = cx * ((cy * z) + sy * ((sz * y) + (cz * x))) - (sx * ((cz * y) - (sz * x)));
 	
+	--print(dz)
 	if dz <= 0 then
-		dz = 0.0001;
+		dz = 0.001-- * ( dz > 0 and 1 or dz < 0 and 1 or 0);
 		--bx = -bx; by = -by;
-		--dx = -dx; dy = -dy; dz = -dz;
+		--dx = -dx; dy = -dy; --dz = -dz;
+	
+	-- if any point is here or more than its not offscreen
 	else
 		OFFSCREEN_FLAG = false;
-	end	
+	end
 	
 	local fov = 1
 	local bx = ((fov / dz) * dx)  --+ self.position.x

@@ -18,44 +18,51 @@ function love.load()
 	obj2.mesh:translate( vec3.new(0,6,0) );
 	obj2.mesh:setColor(0,1,1)
 
-	obj3  = Body.new(SCENE); obj3.name = "Obj3";
-	obj3.mesh = ShapeQuad.new(obj3, vec3.new(1,1,0));
-	obj3.mesh:translate( vec3.new(4,0,4) );
-	obj3.mesh.color = {1,0,0}
+	-- obj3  = Body.new(SCENE); obj3.name = "Obj3";
+	-- obj3.mesh = ShapeQuad.new(obj3, vec3.new(1,1,0));
+	-- obj3.mesh:translate( vec3.new(4,0,4) );
+	-- obj3.mesh.color = {1,0,0}
 
 	obj4  = Body.new(SCENE); obj4.name = "Obj4";
 	obj4.mesh = ShapeQuad.new(obj4, vec3.new(4,0,4));
 	obj4.mesh:translate( vec3.new(6,8,4) );
 	obj4.mesh.color = {0,1,0}
 
-	obj5  = Body.new(SCENE); obj5.name = "Obj5";
-	obj5.mesh = ShapeQuad.new(obj5, vec3.new(0,3,1));
-	obj5.mesh:translate( vec3.new(10,0,6) );
-	obj5.mesh.color = {1,1,0}
+	-- obj5  = Body.new(SCENE); obj5.name = "Obj5";
+	-- obj5.mesh = ShapeQuad.new(obj5, vec3.new(0,3,1));
+	-- obj5.mesh:translate( vec3.new(10,0,6) );
+	-- obj5.mesh.color = {1,1,0}
 	
-	CAMERA_MAIN = Camera.new(SCENE);
-	CAMERA_MAIN.position  = vec3.new(0,0,2)
-	CAMERA_MAIN.direction = vec3.new(0,math.pi,0)
+	PLAYER = Body.new(SCENE); PLAYER.name = "Player";
+	PLAYER.mesh = ShapeBox.new(PLAYER, vec3.new(0.5,0.5,0.5));
+	PLAYER:translate( vec3.new(4,2,4) );
+	PLAYER.mesh:setColor(1,1,0)
+	
+	CAMERA_MAIN = Camera.new(PLAYER);
+	CAMERA_MAIN.position  = vec3.new(4,-2,0)
+	CAMERA_MAIN.direction = vec3.new(-math.pi/4,0,0)
 end
 
 function love.update(dt)
 	WINDOW_WIDTH,WINDOW_HEIGHT = love.graphics.getDimensions();
 	
-	local d = CAMERA_MAIN.direction;
-	local p = CAMERA_MAIN.position;
+	PLAYER:translate( vec3.new(0,0.1,0));
+	
+	local d = PLAYER.direction;
+	local p = PLAYER.position;
 	
 	if love.keyboard.isDown("left") then
-		CAMERA_MAIN.direction = CAMERA_MAIN.direction:add(vec3.new(0, -0.025, 0));
+		PLAYER:rotate(vec3.new(0, -0.025, 0));
 	end
 	if love.keyboard.isDown("right") then
-		CAMERA_MAIN.direction = CAMERA_MAIN.direction:add(vec3.new(0, 0.025, 0));
+		PLAYER:rotate(vec3.new(0, 0.025, 0));
 	end
 	
 	if love.keyboard.isDown("up") then
-		CAMERA_MAIN.direction = vec3.new(d.x + 0.025,d.y,d.z)
+		--CAMERA_MAIN.direction = vec3.new(d.x + 0.025,d.y,d.z)
 	end
 	if love.keyboard.isDown("down") then
-		CAMERA_MAIN.direction = vec3.new(d.x - 0.025,d.y,d.z)
+		--CAMERA_MAIN.direction = vec3.new(d.x - 0.025,d.y,d.z)
 	end
 	
 	if love.keyboard.isDown("a") then
@@ -70,17 +77,19 @@ function love.update(dt)
 	local s = coeff * ( math.cos(d.y) );
 	
 	if love.keyboard.isDown("w") then
+		PLAYER:translate( vec3.new( c, 0, s ));
 		--CAMERA_MAIN.position = CAMERA_MAIN.position:add( vec3.new( d.x * 0.01, d.y * 0.01, d.z * 0.01 ) );
-		CAMERA_MAIN.position = vec3.new( p.x + c, p.y, p.z + s )
+		--CAMERA_MAIN.position = vec3.new( p.x + c, p.y, p.z + s )
 	end
 	if love.keyboard.isDown("s") then
-		CAMERA_MAIN.position = vec3.new( p.x - c, p.y, p.z - s )
+		PLAYER:translate( vec3.new( -c, 0, -s ));
+		--CAMERA_MAIN.position = vec3.new( p.x - c, p.y, p.z - s )
 	end
 	if love.keyboard.isDown("q") then
-		CAMERA_MAIN.position = vec3.new(p.x,p.y + 0.01,p.z)
+		--CAMERA_MAIN.position = vec3.new(p.x,p.y + 0.025,p.z)
 	end
 	if love.keyboard.isDown("e") then
-		CAMERA_MAIN.position = vec3.new(p.x,p.y - 0.01,p.z)
+		--CAMERA_MAIN.position = vec3.new(p.x,p.y - 0.025,p.z)
 	end
 end
 
