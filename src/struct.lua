@@ -60,4 +60,9 @@ function Body:translate( vec3_offset )
 	if self.mesh then
 		self.mesh:translate( vec3_offset );
 	end
+	for k,v in pairs(self.children) do
+		if v == CAMERA_MAIN then
+			CAMERA_MAIN:translate( vec3_offset );
+		end
+	end
 end

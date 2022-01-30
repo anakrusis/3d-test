@@ -314,10 +314,10 @@ setmetatable(ShapeBox, {__index = Shape});
 
 -- for some reason we have to redundantly define this here, otherwise the faces arent able to call it on the parent node ("self") in the above constructor
 -- (does anyone know why this is?)
-function ShapeBox:appendElement(e)
-	e.parent = self;
-	table.insert(self.children, e);
-end
+-- function ShapeBox:appendElement(e)
+	-- e.parent = self;
+	-- table.insert(self.children, e);
+-- end
 
 function ShapeBox:translate(vec3_offset)
 	for i = 1, #self.faces do

@@ -1,7 +1,7 @@
-require "transform"
-require "camera"
-require "shape";
+require "transform";
 require "struct";
+require "shape";
+require "camera";
 
 function love.load()
 	
@@ -46,7 +46,9 @@ end
 function love.update(dt)
 	WINDOW_WIDTH,WINDOW_HEIGHT = love.graphics.getDimensions();
 	
-	PLAYER:translate( vec3.new(0,0.1,0));
+	if PLAYER.position.y < 8 then
+		PLAYER:translate( vec3.new(0,0.1,0));
+	end
 	
 	local d = PLAYER.direction;
 	local p = PLAYER.position;
@@ -78,6 +80,7 @@ function love.update(dt)
 	
 	if love.keyboard.isDown("w") then
 		PLAYER:translate( vec3.new( c, 0, s ));
+		
 		--CAMERA_MAIN.position = CAMERA_MAIN.position:add( vec3.new( d.x * 0.01, d.y * 0.01, d.z * 0.01 ) );
 		--CAMERA_MAIN.position = vec3.new( p.x + c, p.y, p.z + s )
 	end
