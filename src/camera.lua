@@ -15,6 +15,14 @@ function Camera:tra_y(y) -- translate y based on camera values
 	return (( y - self.position.x ) * self.zoom ) + (WINDOW_HEIGHT / 2)
 end
 
+function Camera:lookAt(body)
+	local ah = ( body.position.y - self.position.y ) / ( self.position:distance( body.position ));
+	local newx = math.acos( ah ) - math.pi/2
+	local newy = math.atan2( body.position.z - self.position.z, body.position.x - self.position.x ) - math.pi/2;
+	
+	self.direction = vec3.new( newx, newy, self.direction.z);
+end
+
 function Camera:transform(vec3d_in)
 	
 	local x = vec3d_in.x - self.position.x; 

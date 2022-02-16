@@ -80,7 +80,8 @@ function Shape:translate(vec3_offset)
 	self.position = self.position:add( vec3_offset );
 end
 
--- rotates all points in the shape around the point self.position
+-- Rotates all points in the shape around a specified origin point.
+-- If no origin point is specified, then self.position will be used
 function Shape:rotate(vec3_rot, origin)
 	if not origin then
 		origin = self.position;
@@ -121,7 +122,7 @@ function Shape:rotate(vec3_rot, origin)
 		--print(nx + origin.x .. " " .. ny + origin.y .. " " .. nz + origin.z);
 	end
 
-	-- translating the position vector of the shape along with its points	
+	-- in addition to the points above, the position vector itself has to be updated too	
 	if origin ~= self.position then
 		local ox = self.position.x - origin.x;
 		local oy = self.position.y - origin.y;
@@ -210,6 +211,20 @@ function ShapeQuad:getNormal()
 	return prod;
 end
 
+-- used for painters algorithm. Returns the distance between the camera and the furthest away point of this quad
+function ShapeQuad:getFurthestDistance()
+	local a_furthest_point = nil;
+	local a_furthest_dist  = 0;
+	for i = 1, 4 do
+		local apoint = self.points[i];
+		local dist = apoint:distance( CAMERA_MAIN.position );
+		if dist > a_furthest_dist then
+			a_furthest_dist = dist; a_furthest_point = apoint;
+		end
+	end
+	return a_furthest_dist;
+end
+
 function ShapeQuad:render()
 	local vertices = {};
 	
@@ -239,19 +254,61 @@ function ShapeQuad:render()
 	love.graphics.polygon("line", vertices);
 	
 	--print("center")
-	-- Draws a single point at the position vector of the surface
+	-- -- Draws a single point at the position vector of the surface
+	-- local out = CAMERA_MAIN:transform(self.position);
+	-- local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
+	-- local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
+	-- love.graphics.circle("fill", tx, ty, 5);
+	
+	-- -- Draws a line perpendicular to the surface
+	-- local normal = self:getNormal();
+	-- local point2 = self.position:add(normal);
+	-- out = CAMERA_MAIN:transform(point2); 
+	-- local nx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
+	-- local ny  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
+	-- love.graphics.line(tx,ty,nx,ny);
+end
+
+-- this is for meshes that dont render in 3d, but are 2d sprites overlaid.
+-- If i ever figure out how to texture quads, this will be merged with it
+ShapeBillboard = {}; ShapeBillboard.__index = ShapeBillboard;
+function ShapeBillboard.new(parent, vec2_extents)
+	local self = setmetatable(Shape.new(parent), ShapeBillboard);
+	self.type = "ShapeBillboard";
+	self.height = 2 * vec2_extents.y;
+	self.width  = 2 * vec2_extents.x;
+	self.texture = nil;
+	
+	return self;
+end
+setmetatable(ShapeBillboard, {__index = Shape});
+
+-- renders with the position vector at the bottom-center of the image
+-- (for now)
+function ShapeBillboard:render()
+	-- first getting the origin point to draw
 	local out = CAMERA_MAIN:transform(self.position);
 	local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
 	local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
-	love.graphics.circle("fill", tx, ty, 5);
 	
-	-- Draws a line perpendicular to the surface
-	local normal = self:getNormal();
-	local point2 = self.position:add(normal);
-	out = CAMERA_MAIN:transform(point2); 
-	local nx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
-	local ny  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
-	love.graphics.line(tx,ty,nx,ny);
+	-- and the position of a hypothetical point above the origin
+	out = CAMERA_MAIN:transform(self.position:add(vec3.new(0,self.height,0)));
+	local hx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
+	local hy  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
+	
+	local drawnheight = hy - ty;
+	local sx = drawnheight / self.texture:getWidth();
+	local sy = drawnheight / self.texture:getHeight();
+	
+	-- offscreen culling
+	if (ty < 0 and ty - drawnheight < 0) or 
+	   (ty > WINDOW_HEIGHT and ty - drawnheight > WINDOW_HEIGHT) then
+		return
+	end
+	if sx > 20 or sy > 20 then return end
+	
+	love.graphics.setColor(1,1,1)
+	love.graphics.draw(self.texture, tx, ty - drawnheight, 0, sx, sy);
 end
 
 -- rectangular prism

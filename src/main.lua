@@ -33,6 +33,11 @@ function love.load()
 	-- obj5.mesh:translate( vec3.new(10,0,6) );
 	-- obj5.mesh.color = {1,1,0}
 	
+	BILL = Body.new(SCENE);
+	BILL.mesh = ShapeBillboard.new(BILL, vec2.new(1,1));
+	BILL.mesh:translate( vec3.new(5,8,5) );
+	BILL.mesh.texture = love.graphics.newImage("assets/shroom.png");
+	
 	PLAYER = Body.new(SCENE); PLAYER.name = "Player";
 	PLAYER.mesh = ShapeBox.new(PLAYER, vec3.new(0.5,0.5,0.5));
 	PLAYER:translate( vec3.new(4,2,4) );
@@ -40,7 +45,8 @@ function love.load()
 	
 	CAMERA_MAIN = Camera.new(PLAYER);
 	CAMERA_MAIN.position  = vec3.new(4,-2,0)
-	CAMERA_MAIN.direction = vec3.new(-math.pi/4,0,0)
+	CAMERA_MAIN:lookAt(PLAYER);
+	--CAMERA_MAIN.direction = vec3.new(-math.pi/4,0,0)
 end
 
 function love.update(dt)
@@ -54,24 +60,28 @@ function love.update(dt)
 	local p = PLAYER.position;
 	
 	if love.keyboard.isDown("left") then
-		PLAYER:rotate(vec3.new(0, -0.025, 0));
+		--PLAYER:rotate(vec3.new(0, -0.025, 0));
+		CAMERA_MAIN:rotate( vec3.new(0,-0.025,0) );
 	end
 	if love.keyboard.isDown("right") then
-		PLAYER:rotate(vec3.new(0, 0.025, 0));
+		--PLAYER:rotate(vec3.new(0, 0.025, 0));
+		CAMERA_MAIN:rotate( vec3.new(0,0.025,0) );
 	end
 	
 	if love.keyboard.isDown("up") then
-		--CAMERA_MAIN.direction = vec3.new(d.x + 0.025,d.y,d.z)
+		CAMERA_MAIN:rotate( vec3.new(0.025,0,0) );
 	end
 	if love.keyboard.isDown("down") then
-		--CAMERA_MAIN.direction = vec3.new(d.x - 0.025,d.y,d.z)
+		CAMERA_MAIN:rotate( vec3.new(-0.025,0,0) );
 	end
 	
 	if love.keyboard.isDown("a") then
 		--CAMERA_MAIN.position = vec3.new(p.x + 0.01,p.y,p.z)
+		PLAYER:rotate(vec3.new(0, -0.025, 0));
 	end
 	if love.keyboard.isDown("d") then
 		--CAMERA_MAIN.position = vec3.new(p.x - 0.01,p.y,p.z)
+		PLAYER:rotate(vec3.new(0, 0.025, 0));
 	end
 	
 	local coeff = 0.1;
@@ -97,30 +107,25 @@ function love.update(dt)
 end
 
 function sortQuads(a,b)
-	local a_furthest_point = nil;
-	local a_furthest_dist  = 0;
-	for i = 1, 4 do
-		local apoint = a.points[i];
-		local dist = apoint:distance( CAMERA_MAIN.position );
-		if dist > a_furthest_dist then
-			a_furthest_dist = dist; a_furthest_point = apoint;
-		end
+	local a_furthest_dist = 0;
+	if a.type == "ShapeBillboard" then
+		a_furthest_dist = a.position:distance( CAMERA_MAIN.position )
+	else
+		a_furthest_dist = a:getFurthestDistance();
 	end
-	
-	local b_furthest_point = nil;
-	local b_furthest_dist  = 0;
-	for i = 1, 4 do
-		local bpoint = b.points[i];
-		local dist = bpoint:distance( CAMERA_MAIN.position );
-		if dist > b_furthest_dist then
-			b_furthest_dist = dist; b_furthest_point = bpoint;
-		end
+	local b_furthest_dist = 0;
+	if b.type == "ShapeBillboard" then
+		b_furthest_dist = b.position:distance( CAMERA_MAIN.position )
+	else
+		b_furthest_dist = b:getFurthestDistance();
 	end
-	
-	return a_furthest_dist > b_furthest_dist
+	return a_furthest_dist > b_furthest_dist;
 end
 
 function love.draw()
+	love.graphics.push();
+	--love.graphics.scale(2);
+
 	love.graphics.setBackgroundColor( 1,1,1 )
 	love.graphics.setLineWidth( 5 )
 	
@@ -130,7 +135,7 @@ function love.draw()
 
 	for k,v in pairs(SCENE.children) do
 		if v.mesh then
-			if v.mesh.type == "ShapeQuad" then
+			if v.mesh.type == "ShapeQuad" or v.mesh.type == "ShapeBillboard" then
 				table.insert(SORTED_QUADS, v.mesh);
 			
 			elseif v.mesh.type == "ShapeBox" then
@@ -175,4 +180,6 @@ function love.draw()
 	
 	love.graphics.line(0,128,256,128)
 	love.graphics.line(128,0,128,256)
+	
+	love.graphics.pop();
 end
