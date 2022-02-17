@@ -2,11 +2,15 @@ require "transform";
 require "struct";
 require "shape";
 require "camera";
+require "tileset";
 
 function love.load()
 	
+	PIXEL_SCALE = 4;
+	
 	success = love.window.setMode( 800, 800, {resizable=true, minwidth=800, minheight=600} )
 	love.graphics.setLineJoin( "none" );
+	love.graphics.setLineStyle( "rough" );
 	
 	SCENE = Node.new();
 	
@@ -37,6 +41,11 @@ function love.load()
 	BILL.mesh = ShapeBillboard.new(BILL, vec2.new(1,1));
 	BILL.mesh:translate( vec3.new(5,8,5) );
 	BILL.mesh.texture = love.graphics.newImage("assets/shroom.png");
+
+	b2 = Body.new(SCENE); 
+	b2.mesh = ShapeBox.new(b2, vec3.new(1,1,1));
+	b2:translate( vec3.new(9,7,5) );
+	b2.mesh:setColor(1,0.2,1)
 	
 	PLAYER = Body.new(SCENE); PLAYER.name = "Player";
 	PLAYER.mesh = ShapeBox.new(PLAYER, vec3.new(0.5,0.5,0.5));
@@ -47,11 +56,23 @@ function love.load()
 	CAMERA_MAIN.position  = vec3.new(4,-2,0)
 	CAMERA_MAIN:lookAt(PLAYER);
 	--CAMERA_MAIN.direction = vec3.new(-math.pi/4,0,0)
+	
+	A = love.graphics.newImage("assets/a.png");
+	
+	WINDOW_WIDTH,WINDOW_HEIGHT = love.graphics.getDimensions();
+	CANVAS = love.graphics.newCanvas( WINDOW_WIDTH / PIXEL_SCALE, WINDOW_HEIGHT / PIXEL_SCALE )
+	
+	TILESET1 = Tileset.new("assets/chr000.png");
+	
+	TILEMAP1 = {{1},{2},{3},{4},{5}};
+end
+
+function love.resize(w,h)
+	WINDOW_WIDTH = w; WINDOW_HEIGHT = h;
+	CANVAS = love.graphics.newCanvas( WINDOW_WIDTH / PIXEL_SCALE, WINDOW_HEIGHT / PIXEL_SCALE )
 end
 
 function love.update(dt)
-	WINDOW_WIDTH,WINDOW_HEIGHT = love.graphics.getDimensions();
-	
 	if PLAYER.position.y < 8 then
 		PLAYER:translate( vec3.new(0,0.1,0));
 	end
@@ -123,11 +144,12 @@ function sortQuads(a,b)
 end
 
 function love.draw()
-	love.graphics.push();
-	--love.graphics.scale(2);
-
-	love.graphics.setBackgroundColor( 1,1,1 )
-	love.graphics.setLineWidth( 5 )
+	--love.graphics.push();
+	love.graphics.setCanvas(CANVAS)
+	--love.graphics.scale(PIXEL_SCALE);
+	
+	love.graphics.clear(1,1,1);
+	love.graphics.setLineWidth( 2 )
 	
 	-- this will contain a table of all the quads to render, sorted from back to front
 	-- PAINTERS ALGORITHM STYLE I think?
@@ -150,6 +172,23 @@ function love.draw()
 		SORTED_QUADS[i]:render();
 	end
 	
+	-- Tilemap overlay
+	for y = 1, WINDOW_HEIGHT / PIXEL_SCALE / 8 do
+		for x = 1, WINDOW_WIDTH / PIXEL_SCALE / 8 do
+		
+			if TILEMAP1[x] then
+				if TILEMAP1[x][y] then
+				
+					local quad = TILESET1.quads[ TILEMAP1[x][y] ];
+					love.graphics.draw(TILESET1.source, quad, (x - 1) * 8, (y - 1) * 8)
+				end
+			else
+			
+			end
+		end
+	end
+	
+	
 	-- DEBUG TEXT
 	love.graphics.setColor(0,0,0)
 	love.graphics.setLineWidth( 1 )
@@ -164,7 +203,7 @@ function love.draw()
 	info = info .. "y: " .. CAMERA_MAIN.direction.y .. "\n"
 	info = info .. "z: " .. CAMERA_MAIN.direction.z .. "\n"
 	
-	love.graphics.print(info);
+	--love.graphics.print(info);
 	
 	local orig  = 128;
 	local scale = 16;
@@ -172,14 +211,24 @@ function love.draw()
 	local ty = orig + ( scale * CAMERA_MAIN.position.z );
 	
 	-- minimap icon with direction pointing arrow
-	love.graphics.circle("fill", tx, ty, 3)
+	--love.graphics.circle("fill", tx, ty, 3)
 	local arrowsize = 8;
 	local ex = arrowsize * math.sin( CAMERA_MAIN.direction.y );
 	local ey = arrowsize * math.cos( CAMERA_MAIN.direction.y );
 	--love.graphics.line(tx,ty,tx+ex,ty+ey);
 	
-	love.graphics.line(0,128,256,128)
-	love.graphics.line(128,0,128,256)
+	--love.graphics.line(0,128,256,128)
+	--love.graphics.line(128,0,128,256)
 	
-	love.graphics.pop();
+	love.graphics.setCanvas()
+	love.graphics.setColor(1,1,1)
+	love.graphics.draw(CANVAS,0,0,0,PIXEL_SCALE,PIXEL_SCALE);
+	--love.graphics.pop();
 end
+
+function drawText(str, x, y)
+	for i = 1, #str do
+		local chara = string.sub(str,i,i)
+		local num = string.char(chara);
+	end
+end 

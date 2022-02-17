@@ -2,7 +2,7 @@ Camera = {}; Camera.__index = Camera;
 function Camera.new(parent)
 	local self = setmetatable(Body.new(parent), Camera);
 	
-	self.zoom = 800;
+	self.zoom = 800 / PIXEL_SCALE;
 	
 	return self;
 end

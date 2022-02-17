@@ -240,8 +240,8 @@ function ShapeQuad:render()
 		local index = 1 + ((i - 1) % #self.points);
 		
 		local out = CAMERA_MAIN:transform(self.points[index]);
-		local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
-		local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
+		local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / PIXEL_SCALE / 2;
+		local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / PIXEL_SCALE / 2;
 		
 		table.insert(vertices, tx); table.insert(vertices, ty); 
 	end
@@ -288,15 +288,15 @@ setmetatable(ShapeBillboard, {__index = Shape});
 function ShapeBillboard:render()
 	-- first getting the origin point to draw
 	local out = CAMERA_MAIN:transform(self.position);
-	local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
-	local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
+	local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / PIXEL_SCALE / 2;
+	local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / PIXEL_SCALE / 2;
 	
 	-- and the position of a hypothetical point above the origin
-	out = CAMERA_MAIN:transform(self.position:add(vec3.new(0,self.height,0)));
-	local hx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
-	local hy  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
+	out = CAMERA_MAIN:transform(self.position:add(vec3.new(0,-self.height,0)));
+	local hx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / PIXEL_SCALE / 2;
+	local hy  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / PIXEL_SCALE / 2;
 	
-	local drawnheight = hy - ty;
+	local drawnheight = ty - hy;
 	local sx = drawnheight / self.texture:getWidth();
 	local sy = drawnheight / self.texture:getHeight();
 	
@@ -308,7 +308,9 @@ function ShapeBillboard:render()
 	if sx > 20 or sy > 20 then return end
 	
 	love.graphics.setColor(1,1,1)
-	love.graphics.draw(self.texture, tx, ty - drawnheight, 0, sx, sy);
+	love.graphics.draw(self.texture, tx - (drawnheight/2), ty - drawnheight, 0, sx, sy);
+	
+	--love.graphics.line(tx,ty,hx,hy)
 end
 
 -- rectangular prism
