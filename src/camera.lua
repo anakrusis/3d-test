@@ -3,7 +3,7 @@ function Camera.new(parent)
 	local self = setmetatable(Body.new(parent), Camera);
 	
 	self.zoom = 800 / PIXEL_SCALE;
-	self.radius = 3;
+	self.radius = 5;
 	
 	return self;
 end

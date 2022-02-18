@@ -1,6 +1,7 @@
 require "transform";
 require "struct";
 require "shape";
+require "billboard";
 require "camera";
 require "tileset";
 
@@ -14,13 +15,13 @@ function love.load()
 	
 	SCENE = Node.new();
 	
-	obj1  = Body.new(SCENE); obj1.name = "Obj1";
-	obj1.mesh = ShapeBox.new(obj1, vec3.new(1,1,1));
+	-- obj1  = Body.new(SCENE); obj1.name = "Obj1";
+	-- obj1.mesh = ShapeBox.new(obj1, vec3.new(1,1,1));
 
-	obj2  = Body.new(SCENE); obj2.name = "Obj2";
-	obj2.mesh = ShapeBox.new(obj2, vec3.new(1,1,1));
-	obj2.mesh:translate( vec3.new(0,6,0) );
-	obj2.mesh:setColor(0,1,1)
+	-- obj2  = Body.new(SCENE); obj2.name = "Obj2";
+	-- obj2.mesh = ShapeBox.new(obj2, vec3.new(1,1,1));
+	-- obj2.mesh:translate( vec3.new(0,6,0) );
+	-- obj2.mesh:setColor(0,1,1)
 
 	-- obj3  = Body.new(SCENE); obj3.name = "Obj3";
 	-- obj3.mesh = ShapeQuad.new(obj3, vec3.new(1,1,0));
@@ -28,29 +29,43 @@ function love.load()
 	-- obj3.mesh.color = {1,0,0}
 
 	obj4  = Body.new(SCENE); obj4.name = "Obj4";
-	obj4.mesh = ShapeQuad.new(obj4, vec3.new(4,0,4));
-	obj4.mesh:translate( vec3.new(6,8,4) );
-	obj4.mesh.color = {0,1,0}
+	local m = ShapeQuad.new(obj4, vec3.new(4,0,4));
+	m:translate( vec3.new(6,8,4) ); m.color = {0,1,0}
+	obj4:addMesh("m",m);
 
 	-- obj5  = Body.new(SCENE); obj5.name = "Obj5";
 	-- obj5.mesh = ShapeQuad.new(obj5, vec3.new(0,3,1));
 	-- obj5.mesh:translate( vec3.new(10,0,6) );
 	-- obj5.mesh.color = {1,1,0}
 	
-	BILL = Body.new(SCENE);
-	BILL.mesh = ShapeBillboard.new(BILL, vec2.new(1,1));
-	BILL.mesh:translate( vec3.new(5,8,5) );
-	BILL.mesh.texture = love.graphics.newImage("assets/shroom.png");
+	-- BILL = Body.new(SCENE);
+	-- BILL.mesh = ShapeBillboard.new(BILL, vec2.new(1,1));
+	-- BILL.mesh:translate( vec3.new(5,8,5) );
+	-- BILL.mesh.texture = love.graphics.newImage("assets/shroom.png");
 
-	b2 = Body.new(SCENE); 
-	b2.mesh = ShapeBox.new(b2, vec3.new(1,1,1));
-	b2:translate( vec3.new(9,7,5) );
-	b2.mesh:setColor(1,0.2,1)
+	-- b2 = Body.new(SCENE); 
+	-- b2.mesh = ShapeBox.new(b2, vec3.new(1,1,1));
+	-- b2:translate( vec3.new(9,7,5) );
+	-- b2.mesh:setColor(1,0.2,1)
 	
 	PLAYER = Body.new(SCENE); PLAYER.name = "Player";
-	PLAYER.mesh = ShapeBox.new(PLAYER, vec3.new(0.5,0.5,0.5));
+	local torsomesh = ShapeBillboard.new(PLAYER, vec3.new(0.5,1));
+	torsomesh.texture = love.graphics.newImage("assets/torso.png");
+	PLAYER:addMesh("torso", torsomesh);
+	
+	local headmesh = ShapeEightWayBillboard.new(PLAYER, vec3.new(0.5,0.5));
+	headmesh.textures = {
+		front = love.graphics.newImage("assets/head_front.png"),
+		tqf = love.graphics.newImage("assets/head_3qf.png"),
+		side = love.graphics.newImage("assets/head_side.png"),
+		tqb = love.graphics.newImage("assets/head_3qb.png"),
+		back = love.graphics.newImage("assets/head_back.png")
+	}
+	headmesh.position = vec3.new(0,-1.25,0);
+	PLAYER:addMesh("head", headmesh);
+	
 	PLAYER:translate( vec3.new(4,2,4) );
-	PLAYER.mesh:setColor(1,1,0)
+	--PLAYER.mesh:setColor(1,1,0)
 	
 	CAMERA_MAIN = Camera.new(PLAYER);
 	CAMERA_MAIN.position  = vec3.new(4,0,0)
@@ -80,6 +95,10 @@ end
 function love.update(dt)
 	if PLAYER.position.y < 8 then
 		PLAYER:translate( vec3.new(0,0.1,0));
+	end
+	
+	for k,v in pairs(SCENE.children) do
+		v:update();
 	end
 	
 	local d = PLAYER.direction;
@@ -170,15 +189,16 @@ function love.draw()
 	SORTED_QUADS = {}
 
 	for k,v in pairs(SCENE.children) do
-		if v.mesh then
-			if v.mesh.type == "ShapeQuad" or v.mesh.type == "ShapeBillboard" then
-				table.insert(SORTED_QUADS, v.mesh);
+		for key, mesh in pairs(v.meshes) do
+			if mesh.type == "ShapeQuad" or mesh.type == "ShapeBillboard" then
+				table.insert(SORTED_QUADS, mesh);
 			
-			elseif v.mesh.type == "ShapeBox" then
-				for i = 1, #v.mesh.faces do
-					table.insert(SORTED_QUADS, v.mesh.faces[i]);
+			elseif mesh.type == "ShapeBox" then
+				for i = 1, #mesh.faces do
+					table.insert(SORTED_QUADS, mesh.faces[i]);
 				end
 			end
+		
 		end
 	end
 	table.sort(SORTED_QUADS, sortQuads)

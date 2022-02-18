@@ -39,12 +39,22 @@ function Body.new(parent)
 	self.position       = vec3.new(0,0,0);
 	self.direction      = vec3.new(0,0,0);
 	
-	self.mesh           = nil;
+	self.meshes         = {};
 	self.collisionShape = nil;
 	
 	return self;
 end
 setmetatable(Body, {__index = Node});
+
+function Body:update()
+	for k,v in pairs(self.meshes) do
+		v:update();
+	end
+end
+
+function Body:addMesh( key, mesh )
+	self.meshes[key] = mesh;
+end
 
 function Body:rotate( vec3_rot )
 	self.direction = self.direction:add( vec3_rot );
@@ -57,8 +67,8 @@ end
 function Body:translate( vec3_offset )
 	self.position = self.position:add( vec3_offset );
 	
-	if self.mesh then
-		self.mesh:translate( vec3_offset );
+	for k,v in pairs(self.meshes) do
+		v:translate( vec3_offset );
 	end
 	for k,v in pairs(self.children) do
 		if v == CAMERA_MAIN then

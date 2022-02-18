@@ -136,6 +136,10 @@ function Shape:rotate(vec3_rot, origin)
 	end
 end
 
+function Shape:update()
+
+end
+
 function Shape:render()
 	for i = 1, #self.points do
 		local out = CAMERA_MAIN:transform(self.points[i]);
@@ -267,50 +271,6 @@ function ShapeQuad:render()
 	-- local nx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / 2;
 	-- local ny  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / 2;
 	-- love.graphics.line(tx,ty,nx,ny);
-end
-
--- this is for meshes that dont render in 3d, but are 2d sprites overlaid.
--- If i ever figure out how to texture quads, this will be merged with it
-ShapeBillboard = {}; ShapeBillboard.__index = ShapeBillboard;
-function ShapeBillboard.new(parent, vec2_extents)
-	local self = setmetatable(Shape.new(parent), ShapeBillboard);
-	self.type = "ShapeBillboard";
-	self.height = 2 * vec2_extents.y;
-	self.width  = 2 * vec2_extents.x;
-	self.texture = nil;
-	
-	return self;
-end
-setmetatable(ShapeBillboard, {__index = Shape});
-
--- renders with the position vector at the bottom-center of the image
--- (for now)
-function ShapeBillboard:render()
-	-- first getting the origin point to draw
-	local out = CAMERA_MAIN:transform(self.position);
-	local tx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / PIXEL_SCALE / 2;
-	local ty  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / PIXEL_SCALE / 2;
-	
-	-- and the position of a hypothetical point above the origin
-	out = CAMERA_MAIN:transform(self.position:add(vec3.new(0,-self.height,0)));
-	local hx  = (out.x * CAMERA_MAIN.zoom) + WINDOW_WIDTH / PIXEL_SCALE / 2;
-	local hy  = (out.y * CAMERA_MAIN.zoom) + WINDOW_HEIGHT / PIXEL_SCALE / 2;
-	
-	local drawnheight = ty - hy;
-	local sx = drawnheight / self.texture:getWidth();
-	local sy = drawnheight / self.texture:getHeight();
-	
-	-- offscreen culling
-	if (ty < 0 and ty - drawnheight < 0) or 
-	   (ty > WINDOW_HEIGHT and ty - drawnheight > WINDOW_HEIGHT) then
-		return
-	end
-	if sx > 20 or sy > 20 then return end
-	
-	love.graphics.setColor(1,1,1)
-	love.graphics.draw(self.texture, tx - (drawnheight/2), ty - drawnheight, 0, sx, sy);
-	
-	--love.graphics.line(tx,ty,hx,hy)
 end
 
 -- rectangular prism
