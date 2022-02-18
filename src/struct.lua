@@ -59,8 +59,8 @@ end
 function Body:rotate( vec3_rot )
 	self.direction = self.direction:add( vec3_rot );
 
-	if self.mesh then
-		--self.mesh:rotate( vec3_rot );
+	for k,v in pairs(self.meshes) do
+		v:rotate( vec3_rot );
 	end
 end
 

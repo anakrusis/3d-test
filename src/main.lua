@@ -38,15 +38,17 @@ function love.load()
 	-- obj5.mesh:translate( vec3.new(10,0,6) );
 	-- obj5.mesh.color = {1,1,0}
 	
-	-- BILL = Body.new(SCENE);
-	-- BILL.mesh = ShapeBillboard.new(BILL, vec2.new(1,1));
-	-- BILL.mesh:translate( vec3.new(5,8,5) );
-	-- BILL.mesh.texture = love.graphics.newImage("assets/shroom.png");
+	BILL = Body.new(SCENE);
+	local bmesh = ShapeBillboard.new(BILL, vec2.new(1,1));
+	bmesh:translate( vec3.new(5,8,5) );
+	bmesh.texture = love.graphics.newImage("assets/shroom.png");
+	BILL:addMesh("b",bmesh);
 
-	-- b2 = Body.new(SCENE); 
-	-- b2.mesh = ShapeBox.new(b2, vec3.new(1,1,1));
-	-- b2:translate( vec3.new(9,7,5) );
-	-- b2.mesh:setColor(1,0.2,1)
+	b2 = Body.new(SCENE); 
+	m = ShapeBox.new(b2, vec3.new(1,1,1));
+	m:translate( vec3.new(9,7,5) );
+	m:setColor(1,0.2,1)
+	b2:addMesh("m",m);
 	
 	PLAYER = Body.new(SCENE); PLAYER.name = "Player";
 	local torsomesh = ShapeBillboard.new(PLAYER, vec3.new(0.5,1));
@@ -84,7 +86,7 @@ function love.load()
 		TILEMAP1[x] = {};
 	end
 	
-	--drawText("testing three d",3,3);
+	drawText("testing three d",3,3);
 end
 
 function love.resize(w,h)
@@ -106,11 +108,23 @@ function love.update(dt)
 	
 	if love.keyboard.isDown("left") then
 		--PLAYER:rotate(vec3.new(0, -0.025, 0));
-		CAMERA_MAIN:rotate( vec3.new(0,-0.025,0) );
+		--CAMERA_MAIN:rotate( vec3.new(0,-0.025,0) );
+		
+		local cx = CAMERA_MAIN.radius * math.sin( CAMERA_MAIN.direction.y + 0.025 + math.pi ) + p.x;
+		local cy = CAMERA_MAIN.position.y;
+		local cz = CAMERA_MAIN.radius * math.cos( CAMERA_MAIN.direction.y + 0.025 + math.pi ) + p.z;
+		CAMERA_MAIN.position = vec3.new( cx, cy, cz )
+		CAMERA_MAIN:lookAt(PLAYER);
 	end
 	if love.keyboard.isDown("right") then
 		--PLAYER:rotate(vec3.new(0, 0.025, 0));
-		CAMERA_MAIN:rotate( vec3.new(0,0.025,0) );
+		--CAMERA_MAIN:rotate( vec3.new(0,0.025,0) );
+		
+		local cx = CAMERA_MAIN.radius * math.sin( CAMERA_MAIN.direction.y - 0.025 + math.pi ) + p.x;
+		local cy = CAMERA_MAIN.position.y;
+		local cz = CAMERA_MAIN.radius * math.cos( CAMERA_MAIN.direction.y - 0.025 + math.pi ) + p.z;
+		CAMERA_MAIN.position = vec3.new( cx, cy, cz )
+		CAMERA_MAIN:lookAt(PLAYER);
 	end
 	
 	if love.keyboard.isDown("up") then
@@ -122,19 +136,9 @@ function love.update(dt)
 	
 	if love.keyboard.isDown("a") then
 		PLAYER:rotate(vec3.new(0, -0.025, 0));
-		local cx = CAMERA_MAIN.radius * math.sin( PLAYER.direction.y + math.pi ) + p.x;
-		local cy = CAMERA_MAIN.position.y;
-		local cz = CAMERA_MAIN.radius * math.cos( PLAYER.direction.y + math.pi ) + p.z;
-		CAMERA_MAIN.position = vec3.new( cx, cy, cz )
-		CAMERA_MAIN:lookAt(PLAYER);
 	end
 	if love.keyboard.isDown("d") then
 		PLAYER:rotate(vec3.new(0, 0.025, 0));
-		local cx = CAMERA_MAIN.radius * math.sin( PLAYER.direction.y + math.pi ) + p.x;
-		local cy = CAMERA_MAIN.position.y;
-		local cz = CAMERA_MAIN.radius * math.cos( PLAYER.direction.y + math.pi ) + p.z;
-		CAMERA_MAIN.position = vec3.new( cx, cy, cz )
-		CAMERA_MAIN:lookAt(PLAYER);
 	end
 	
 	local coeff = 0.1;
@@ -237,7 +241,7 @@ function love.draw()
 	info = info .. "y: " .. CAMERA_MAIN.direction.y .. "\n"
 	info = info .. "z: " .. CAMERA_MAIN.direction.z .. "\n"
 	
-	love.graphics.print(info);
+	--love.graphics.print(info);
 	
 	local orig  = 128;
 	local scale = 16;
@@ -256,6 +260,9 @@ function love.draw()
 	local py = orig + ( scale * PLAYER.position.z );
 	love.graphics.setColor(1,1,0);
 	love.graphics.circle("fill", px, py, 3)
+	ex = arrowsize * math.sin( PLAYER.direction.y );
+	ey = arrowsize * math.cos( PLAYER.direction.y );
+	love.graphics.line(px,py,px+ex,py+ey);
 	
 	love.graphics.line(0,128,256,128)
 	love.graphics.line(128,0,128,256)

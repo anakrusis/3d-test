@@ -45,8 +45,8 @@ function ShapeBillboard:render()
 	love.graphics.setColor(1,1,1)
 	love.graphics.draw(self.texture, tx - (xsign * (drawnwidth/2)), ty - drawnheight, 0, sx, sy);
 	
-	love.graphics.setColor(1,0,0)
-	love.graphics.line(tx,ty,hx,hy)
+	--love.graphics.setColor(1,0,0)
+	--love.graphics.line(tx,ty,hx,hy)
 end
 
 -- special subclass of billboard meshes which have 8-directional sprite animations
@@ -64,6 +64,7 @@ setmetatable(ShapeEightWayBillboard, {__index = ShapeBillboard});
 
 function ShapeEightWayBillboard:update()
 	local angle = math.atan2( self.position.x - CAMERA_MAIN.position.x, self.position.z - CAMERA_MAIN.position.z )
+	angle = ((angle - self.parent.direction.y + math.pi) % (2 * math.pi)) - math.pi
 	print(angle)
 	self.hflip = (angle > 0);
 	local aa = math.abs(angle)
