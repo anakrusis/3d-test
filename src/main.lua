@@ -53,7 +53,7 @@ function love.load()
 	PLAYER.mesh:setColor(1,1,0)
 	
 	CAMERA_MAIN = Camera.new(PLAYER);
-	CAMERA_MAIN.position  = vec3.new(4,-2,0)
+	CAMERA_MAIN.position  = vec3.new(4,0,0)
 	CAMERA_MAIN:lookAt(PLAYER);
 	--CAMERA_MAIN.direction = vec3.new(-math.pi/4,0,0)
 	
@@ -64,7 +64,12 @@ function love.load()
 	
 	TILESET1 = Tileset.new("assets/chr000.png");
 	
-	TILEMAP1 = {{1},{2},{3},{4},{5}};
+	TILEMAP1 = {}
+	for x = 1, 20 do
+		TILEMAP1[x] = {};
+	end
+	
+	--drawText("testing three d",3,3);
 end
 
 function love.resize(w,h)
@@ -97,12 +102,20 @@ function love.update(dt)
 	end
 	
 	if love.keyboard.isDown("a") then
-		--CAMERA_MAIN.position = vec3.new(p.x + 0.01,p.y,p.z)
 		PLAYER:rotate(vec3.new(0, -0.025, 0));
+		local cx = CAMERA_MAIN.radius * math.sin( PLAYER.direction.y + math.pi ) + p.x;
+		local cy = CAMERA_MAIN.position.y;
+		local cz = CAMERA_MAIN.radius * math.cos( PLAYER.direction.y + math.pi ) + p.z;
+		CAMERA_MAIN.position = vec3.new( cx, cy, cz )
+		CAMERA_MAIN:lookAt(PLAYER);
 	end
 	if love.keyboard.isDown("d") then
-		--CAMERA_MAIN.position = vec3.new(p.x - 0.01,p.y,p.z)
 		PLAYER:rotate(vec3.new(0, 0.025, 0));
+		local cx = CAMERA_MAIN.radius * math.sin( PLAYER.direction.y + math.pi ) + p.x;
+		local cy = CAMERA_MAIN.position.y;
+		local cz = CAMERA_MAIN.radius * math.cos( PLAYER.direction.y + math.pi ) + p.z;
+		CAMERA_MAIN.position = vec3.new( cx, cy, cz )
+		CAMERA_MAIN:lookAt(PLAYER);
 	end
 	
 	local coeff = 0.1;
@@ -120,6 +133,7 @@ function love.update(dt)
 		--CAMERA_MAIN.position = vec3.new( p.x - c, p.y, p.z - s )
 	end
 	if love.keyboard.isDown("q") then
+		CAMERA_MAIN:lookAt(PLAYER);
 		--CAMERA_MAIN.position = vec3.new(p.x,p.y + 0.025,p.z)
 	end
 	if love.keyboard.isDown("e") then
@@ -203,7 +217,7 @@ function love.draw()
 	info = info .. "y: " .. CAMERA_MAIN.direction.y .. "\n"
 	info = info .. "z: " .. CAMERA_MAIN.direction.z .. "\n"
 	
-	--love.graphics.print(info);
+	love.graphics.print(info);
 	
 	local orig  = 128;
 	local scale = 16;
@@ -211,14 +225,20 @@ function love.draw()
 	local ty = orig + ( scale * CAMERA_MAIN.position.z );
 	
 	-- minimap icon with direction pointing arrow
-	--love.graphics.circle("fill", tx, ty, 3)
+	love.graphics.circle("fill", tx, ty, 3)
 	local arrowsize = 8;
 	local ex = arrowsize * math.sin( CAMERA_MAIN.direction.y );
 	local ey = arrowsize * math.cos( CAMERA_MAIN.direction.y );
-	--love.graphics.line(tx,ty,tx+ex,ty+ey);
+	love.graphics.line(tx,ty,tx+ex,ty+ey);
 	
-	--love.graphics.line(0,128,256,128)
-	--love.graphics.line(128,0,128,256)
+	-- icon showing player
+	local px = orig + ( scale * PLAYER.position.x );
+	local py = orig + ( scale * PLAYER.position.z );
+	love.graphics.setColor(1,1,0);
+	love.graphics.circle("fill", px, py, 3)
+	
+	love.graphics.line(0,128,256,128)
+	love.graphics.line(128,0,128,256)
 	
 	love.graphics.setCanvas()
 	love.graphics.setColor(1,1,1)
@@ -226,9 +246,17 @@ function love.draw()
 	--love.graphics.pop();
 end
 
+-- we can add wrapping and stuff soon
 function drawText(str, x, y)
+	local tx = x; local ty = y;
 	for i = 1, #str do
 		local chara = string.sub(str,i,i)
-		local num = string.char(chara);
+		local num = string.byte(chara);
+		
+		if TILEMAP1[tx] then
+			TILEMAP1[tx][ty] = num + 1;
+		end
+		
+		tx = tx + 1;
 	end
 end 

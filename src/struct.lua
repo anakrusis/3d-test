@@ -50,7 +50,7 @@ function Body:rotate( vec3_rot )
 	self.direction = self.direction:add( vec3_rot );
 
 	if self.mesh then
-		self.mesh:rotate( vec3_rot );
+		--self.mesh:rotate( vec3_rot );
 	end
 end
 

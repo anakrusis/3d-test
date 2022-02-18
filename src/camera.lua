@@ -3,6 +3,7 @@ function Camera.new(parent)
 	local self = setmetatable(Body.new(parent), Camera);
 	
 	self.zoom = 800 / PIXEL_SCALE;
+	self.radius = 3;
 	
 	return self;
 end
@@ -18,7 +19,7 @@ end
 function Camera:lookAt(body)
 	local ah = ( body.position.y - self.position.y ) / ( self.position:distance( body.position ));
 	local newx = math.acos( ah ) - math.pi/2
-	local newy = math.atan2( body.position.z - self.position.z, body.position.x - self.position.x ) - math.pi/2;
+	local newy = math.atan2( body.position.x - self.position.x, body.position.z - self.position.z ) -- math.pi/2;
 	
 	self.direction = vec3.new( newx, newy, self.direction.z);
 end
