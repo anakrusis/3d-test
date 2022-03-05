@@ -65,7 +65,6 @@ setmetatable(ShapeEightWayBillboard, {__index = ShapeBillboard});
 function ShapeEightWayBillboard:update()
 	local angle = math.atan2( self.position.x - CAMERA_MAIN.position.x, self.position.z - CAMERA_MAIN.position.z )
 	angle = ((angle - self.parent.direction.y + math.pi) % (2 * math.pi)) - math.pi
-	print(angle)
 	self.hflip = (angle > 0);
 	local aa = math.abs(angle)
 	
